@@ -1,0 +1,627 @@
+openapi: 3.0.0
+info:
+  title: A - Ouverture Collectivité
+  version: 1.0.0
+
+paths:
+
+  /collectivities/requests:
+    post:
+      summary: Soumettre une demande de création de collectivité
+      description: Nécessite au moins 10 membres dont 5 avec 6 mois d’ancienneté et des postes occupés.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, city, specialty, membersIds]
+              properties:
+                name:
+                  type: string
+                city:
+                  type: string
+                specialty:
+                  type: string
+                membersIds:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: Demande créée
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  requestId:
+                    type: integer
+                  status:
+                    type: string
+                    example: PENDING
+        '400':
+          description: Conditions non respectées
+
+  /collectivities/{id}/validate:
+    post:
+      summary: Valider ou refuser l’ouverture par la fédération
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Demande validée
+        '403':
+          description: Refus de la fédération
+
+  /collectivities:
+    post:
+      summary: Créer officiellement une collectivité après validation
+      responses:
+        '200':
+          description: Collectivité créée
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                  city:
+                    type: string
+                  specialty:
+                    type: string
+
+
+openapi: 3.0.0
+info:
+  title: B - Membres (v2 - 21 avril 2026)
+  version: 2.0.0
+
+paths:
+
+  /members/applications:
+    post:
+      summary: Demande d'adhésion (conditions mises à jour)
+      description: >
+        Nécessite au moins 2 parrains membres confirmés de la fédération.
+        Le nombre de parrains issus de la collectivité cible doit être >= 
+        au nombre de parrains issus d'autres collectivités.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - firstName
+                - lastName
+                - birthDate
+                - gender
+                - address
+                - job
+                - phone
+                - email
+                - collectivityId
+                - sponsors
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                birthDate:
+                  type: string
+                  format: date
+                gender:
+                  type: string
+                  enum: [MALE, FEMALE]
+                address:
+                  type: string
+                job:
+                  type: string
+                phone:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                collectivityId:
+                  type: integer
+                  description: Collectivité dans laquelle le candidat postule
+                sponsors:
+                  type: array
+                  minItems: 2
+                  description: >
+                    Au moins 2 parrains membres confirmés. Le nombre de parrains 
+                    de la collectivité cible doit être >= au nombre des autres.
+                  items:
+                    type: object
+                    required: [memberId, relationship]
+                    properties:
+                      memberId:
+                        type: integer
+                      relationship:
+                        type: string
+                        description: Nature de la relation (famille, amis, collègues, etc.)
+                        example: famille
+      responses:
+        '201':
+          description: Demande créée
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  applicationId:
+                    type: integer
+                  status:
+                    type: string
+                    example: PENDING
+        '400':
+          description: Conditions de parrainage non respectées
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Règle de répartition des parrains non respectée
+
+  /members/applications/{id}/pay:
+    post:
+      summary: >
+        Paiement des frais d'adhésion (50 000 MGA) 
+        et des cotisations annuelles obligatoires de la collectivité
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [payments]
+              properties:
+                payments:
+                  type: array
+                  description: >
+                    Liste des paiements. Doit inclure les frais d'adhésion 
+                    (50 000 MGA) + l'intégralité des cotisations annuelles 
+                    obligatoires définies par la collectivité.
+                  items:
+                    type: object
+                    required: [type, amount, method]
+                    properties:
+                      type:
+                        type: string
+                        enum: [ADMISSION_FEE, ANNUAL_CONTRIBUTION]
+                        description: >
+                          ADMISSION_FEE = frais d'adhésion 50 000 MGA,
+                          ANNUAL_CONTRIBUTION = cotisations annuelles obligatoires
+                      amount:
+                        type: number
+                        example: 50000
+                      method:
+                        type: string
+                        enum: [MOBILE_MONEY, BANK_TRANSFER]
+                        description: Espèces non acceptées pour l'adhésion
+      responses:
+        '200':
+          description: Paiement validé
+        '400':
+          description: Montant incorrect ou mode de paiement invalide
+
+  /members/applications/{id}/validate:
+    post:
+      summary: Validation finale de l'adhésion par la collectivité
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Membre activé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  memberId:
+                    type: integer
+                  status:
+                    type: string
+                    example: ACTIVE
+        '403':
+          description: Demande refusée
+
+  /collectivities/{id}/members/{memberId}/transfer:
+    post:
+      summary: Changer de collectivité
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: memberId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [targetCollectivityId]
+              properties:
+                targetCollectivityId:
+                  type: integer
+      responses:
+        '200':
+          description: Transfert effectué
+
+  /collectivities/{id}/members/{memberId}/resign:
+    post:
+      summary: Démissionner d'une collectivité
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: memberId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Démission enregistrée
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+
+
+openapi: 3.0.0
+info:
+  title: C - Cotisations
+  version: 1.0.0
+
+paths:
+  /collectivities/{id}/contributions:
+    post:
+      summary: Créer une cotisation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, amount]
+              properties:
+                type:
+                  type: string
+                  example: MONTHLY
+                amount:
+                  type: number
+      responses:
+        '200':
+          description: Cotisation créée
+
+  /members/{id}/contributions/{contributionId}/pay:
+    post:
+      summary: Payer une cotisation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ amount, date, method ]
+              properties:
+                amount:
+                  type: number
+                date:
+                  type: string
+                  format: date
+                method:
+                  type: string
+                  example: CASH
+      responses:
+        '200':
+          description: Paiement enregistré
+        '400':
+          description: Paiement invalide
+
+
+  /members/{id}/payments:
+    get:
+      summary: Historique des paiements
+      responses:
+        '200':
+          description: Liste des paiements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    amount:
+                      type: number
+                    date:
+                      type: string
+                    method:
+                      type: string
+
+
+openapi: 3.0.0
+info:
+  title: D - Comptes
+  version: 1.0.0
+
+paths:
+  /collectivities/{id}/accounts:
+    post:
+      summary: Créer un compte
+      description: Une seule caisse autorisée par collectivité.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ type, holderName ]
+              properties:
+                type:
+                  type: string
+                  example: BANK
+                holderName:
+                  type: string
+                bankName:
+                  type: string
+                accountNumber:
+                  type: string
+                provider:
+                  type: string
+                phone:
+                  type: string
+
+  /accounts/{id}/balance:
+    get:
+      summary: Consulter le solde
+      responses:
+        '200':
+          description: Solde retourné
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  balance:
+                    type: number
+
+
+
+openapi: 3.0.0
+info:
+  title: E - Activités
+  version: 1.0.0
+
+paths:
+  /collectivities/{id}/activities:
+    post:
+      summary: Créer une activité
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                mandatory:
+                  type: boolean
+      responses:
+        '200':
+          description: Activité créée
+
+  /activities/{id}/attendance:
+    post:
+      summary: Enregistrer présence
+      responses:
+        '200':
+          description: Présence enregistrée
+
+
+
+openapi: 3.0.0
+info:
+  title: F - Assiduité
+  version: 1.0.0
+
+paths:
+  /members/{id}/attendance:
+    get:
+      summary: Voir assiduité
+      responses:
+        '200':
+          description: Statistiques d’assiduité
+
+
+
+openapi: 3.0.0
+info:
+  title: F - Assiduité
+  version: 1.0.0
+
+paths:
+  /members/{id}/attendance:
+    get:
+      summary: Voir assiduité
+      responses:
+        '200':
+          description: Statistiques d’assiduité
+
+
+
+
+openapi: 3.0.0
+info:
+  title: G - Statistiques
+  version: 1.0.0
+
+paths:
+  /collectivities/{id}/stats:
+    get:
+      summary: Statistiques collectivité
+      responses:
+        '200':
+          description: Taux assiduité + membres
+
+  /members/{id}/stats:
+    get:
+      summary: Statistiques membre
+      responses:
+        '200':
+          description: Paiements + assiduité
+
+
+
+
+openapi: 3.0.0
+info:
+  title: H - Statistiques de la fédération
+  version: 1.0.0
+
+paths:
+
+  /federation/stats:
+    get:
+      summary: Rapport global de la fédération sur une période donnée
+      description: >
+        Rapport mensuel et annuel compilé par le secrétaire de la fédération.
+        Présenté lors des assemblées générales.
+      parameters:
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Début de la période
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Fin de la période
+        - name: period
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [MONTHLY, ANNUAL]
+          description: Type de rapport (mensuel ou annuel)
+      responses:
+        '200':
+          description: Rapport global de la fédération
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  period:
+                    type: object
+                    properties:
+                      startDate:
+                        type: string
+                        format: date
+                      endDate:
+                        type: string
+                        format: date
+                  collectivities:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CollectivityReport'
+        '400':
+          description: Paramètres de période invalides
+
+  /federation/stats/collectivities/{id}:
+    get:
+      summary: Rapport détaillé d'une collectivité spécifique
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Rapport détaillé de la collectivité
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectivityReport'
+        '404':
+          description: Collectivité introuvable
+
+components:
+  schemas:
+    CollectivityReport:
+      type: object
+      properties:
+        collectivityId:
+          type: integer
+        collectivityName:
+          type: string
+        attendanceRate:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          description: >
+            Taux d'assiduité global de la collectivité sur la période (en %)
+        contributionComplianceRate:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          description: >
+            Pourcentage de membres à jour dans leur cotisation sur la période (en %)
+        newMembersCount:
+          type: integer
+          description: Nombre de nouveaux adhérents sur la période
+        totalMembersCount:
+          type: integer
+          description: Nombre total de membres actifs (non démissionnaires)
