@@ -1,0 +1,29 @@
+openapi: 3.0.0
+info:
+  title: E - Activités
+  version: 1.0.0
+
+paths:
+  /collectivities/{id}/activities:
+    post:
+      summary: Créer une activité
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                mandatory:
+                  type: boolean
+      responses:
+        '200':
+          description: Activité créée
+
+  /activities/{id}/attendance:
+    post:
+      summary: Enregistrer présence
+      responses:
+        '200':
+          description: Présence enregistrée

@@ -1,0 +1,19 @@
+openapi: 3.0.0
+info:
+  title: G - Statistiques
+  version: 1.0.0
+
+paths:
+  /collectivities/{id}/stats:
+    get:
+      summary: Statistiques collectivité
+      responses:
+        '200':
+          description: Taux assiduité + membres
+
+  /members/{id}/stats:
+    get:
+      summary: Statistiques membre
+      responses:
+        '200':
+          description: Paiements + assiduité

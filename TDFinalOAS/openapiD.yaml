@@ -1,0 +1,45 @@
+openapi: 3.0.0
+info:
+  title: D - Comptes
+  version: 1.0.0
+
+paths:
+  /collectivities/{id}/accounts:
+    post:
+      summary: Créer un compte
+      description: Une seule caisse autorisée par collectivité.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ type, holderName ]
+              properties:
+                type:
+                  type: string
+                  example: BANK
+                holderName:
+                  type: string
+                bankName:
+                  type: string
+                accountNumber:
+                  type: string
+                provider:
+                  type: string
+                phone:
+                  type: string
+
+  /accounts/{id}/balance:
+    get:
+      summary: Consulter le solde
+      responses:
+        '200':
+          description: Solde retourné
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  balance:
+                    type: number
