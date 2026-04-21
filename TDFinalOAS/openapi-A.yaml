@@ -479,3 +479,149 @@ paths:
       responses:
         '200':
           description: Statistiques d’assiduité
+
+
+
+
+openapi: 3.0.0
+info:
+  title: G - Statistiques
+  version: 1.0.0
+
+paths:
+  /collectivities/{id}/stats:
+    get:
+      summary: Statistiques collectivité
+      responses:
+        '200':
+          description: Taux assiduité + membres
+
+  /members/{id}/stats:
+    get:
+      summary: Statistiques membre
+      responses:
+        '200':
+          description: Paiements + assiduité
+
+
+
+
+openapi: 3.0.0
+info:
+  title: H - Statistiques de la fédération
+  version: 1.0.0
+
+paths:
+
+  /federation/stats:
+    get:
+      summary: Rapport global de la fédération sur une période donnée
+      description: >
+        Rapport mensuel et annuel compilé par le secrétaire de la fédération.
+        Présenté lors des assemblées générales.
+      parameters:
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Début de la période
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Fin de la période
+        - name: period
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [MONTHLY, ANNUAL]
+          description: Type de rapport (mensuel ou annuel)
+      responses:
+        '200':
+          description: Rapport global de la fédération
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  period:
+                    type: object
+                    properties:
+                      startDate:
+                        type: string
+                        format: date
+                      endDate:
+                        type: string
+                        format: date
+                  collectivities:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CollectivityReport'
+        '400':
+          description: Paramètres de période invalides
+
+  /federation/stats/collectivities/{id}:
+    get:
+      summary: Rapport détaillé d'une collectivité spécifique
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Rapport détaillé de la collectivité
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectivityReport'
+        '404':
+          description: Collectivité introuvable
+
+components:
+  schemas:
+    CollectivityReport:
+      type: object
+      properties:
+        collectivityId:
+          type: integer
+        collectivityName:
+          type: string
+        attendanceRate:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          description: >
+            Taux d'assiduité global de la collectivité sur la période (en %)
+        contributionComplianceRate:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          description: >
+            Pourcentage de membres à jour dans leur cotisation sur la période (en %)
+        newMembersCount:
+          type: integer
+          description: Nombre de nouveaux adhérents sur la période
+        totalMembersCount:
+          type: integer
+          description: Nombre total de membres actifs (non démissionnaires)
