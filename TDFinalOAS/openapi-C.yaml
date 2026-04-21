@@ -1,0 +1,69 @@
+openapi: 3.0.0
+info:
+  title: C - Cotisations
+  version: 1.0.0
+
+paths:
+  /collectivities/{id}/contributions:
+    post:
+      summary: Créer une cotisation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, amount]
+              properties:
+                type:
+                  type: string
+                  example: MONTHLY
+                amount:
+                  type: number
+      responses:
+        '200':
+          description: Cotisation créée
+
+  /members/{id}/contributions/{contributionId}/pay:
+    post:
+      summary: Payer une cotisation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ amount, date, method ]
+              properties:
+                amount:
+                  type: number
+                date:
+                  type: string
+                  format: date
+                method:
+                  type: string
+                  example: CASH
+      responses:
+        '200':
+          description: Paiement enregistré
+        '400':
+          description: Paiement invalide
+
+
+  /members/{id}/payments:
+    get:
+      summary: Historique des paiements
+      responses:
+        '200':
+          description: Liste des paiements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    amount:
+                      type: number
+                    date:
+                      type: string
+                    method:
+                      type: string

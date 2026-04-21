@@ -1,0 +1,79 @@
+openapi: 3.0.0
+info:
+  title: A - Ouverture Collectivité
+  version: 1.0.0
+
+paths:
+
+  /collectivities/requests:
+    post:
+      summary: Soumettre une demande de création de collectivité
+      description: Nécessite au moins 10 membres dont 5 avec 6 mois d’ancienneté et des postes occupés.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, city, specialty, membersIds]
+              properties:
+                name:
+                  type: string
+                city:
+                  type: string
+                specialty:
+                  type: string
+                membersIds:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: Demande créée
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  requestId:
+                    type: integer
+                  status:
+                    type: string
+                    example: PENDING
+        '400':
+          description: Conditions non respectées
+
+  /collectivities/{id}/validate:
+    post:
+      summary: Valider ou refuser l’ouverture par la fédération
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Demande validée
+        '403':
+          description: Refus de la fédération
+
+  /collectivities:
+    post:
+      summary: Créer officiellement une collectivité après validation
+      responses:
+        '200':
+          description: Collectivité créée
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                  city:
+                    type: string
+                  specialty:
+                    type: string

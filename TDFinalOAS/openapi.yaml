@@ -1,0 +1,81 @@
+openapi: 3.0.0
+info:
+  title: Federation Agricole API
+  version: 1.0.0
+
+paths:
+
+  # A — Ouverture collectivité
+  /collectivities/requests:
+    post:
+      summary: Demande création collectivité
+
+  /collectivities/{id}/validate:
+    get:
+      summary: Vérifier conditions création
+
+  /collectivities:
+    post:
+      summary: Créer collectivité
+
+  /collectivities/{id}/members/assign-roles:
+    post:
+      summary: Affecter postes (président, etc.)
+
+  # B — Membres
+  /members/applications:
+    post:
+      summary: Demande adhésion membre
+
+  /members/applications/{id}/pay:
+    post:
+      summary: Paiement adhésion
+
+  /members/applications/{id}/validate:
+    post:
+      summary: Validation adhésion
+
+  # C — Cotisations
+  /collectivities/{id}/contributions:
+    post:
+      summary: Créer cotisation
+
+  /members/{id}/contributions/{contributionId}/pay:
+    post:
+      summary: Payer cotisation
+
+  /members/{id}/payments:
+    get:
+      summary: Historique paiements
+
+  # D — Comptes
+  /collectivities/{id}/accounts:
+    post:
+      summary: Créer compte (bank/mobile/cash)
+
+  /accounts/{id}/balance:
+    get:
+      summary: Voir solde
+
+  # E — Activités
+  /collectivities/{id}/activities:
+    post:
+      summary: Créer activité
+
+  /activities/{id}/attendance:
+    post:
+      summary: Enregistrer présence
+
+  # F — Assiduité
+  /members/{id}/attendance:
+    get:
+      summary: Voir assiduité membre
+
+  # G — Statistiques
+  /collectivities/{id}/stats:
+    get:
+      summary: Statistiques collectivité
+
+  /members/{id}/stats:
+    get:
+      summary: Statistiques membre

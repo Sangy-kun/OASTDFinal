@@ -1,0 +1,220 @@
+openapi: 3.0.0
+info:
+  title: B - Membres (v2 - 21 avril 2026)
+  version: 2.0.0
+
+paths:
+
+  /members/applications:
+    post:
+      summary: Demande d'adhésion (conditions mises à jour)
+      description: >
+        Nécessite au moins 2 parrains membres confirmés de la fédération.
+        Le nombre de parrains issus de la collectivité cible doit être >= 
+        au nombre de parrains issus d'autres collectivités.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - firstName
+                - lastName
+                - birthDate
+                - gender
+                - address
+                - job
+                - phone
+                - email
+                - collectivityId
+                - sponsors
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                birthDate:
+                  type: string
+                  format: date
+                gender:
+                  type: string
+                  enum: [MALE, FEMALE]
+                address:
+                  type: string
+                job:
+                  type: string
+                phone:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                collectivityId:
+                  type: integer
+                  description: Collectivité dans laquelle le candidat postule
+                sponsors:
+                  type: array
+                  minItems: 2
+                  description: >
+                    Au moins 2 parrains membres confirmés. Le nombre de parrains 
+                    de la collectivité cible doit être >= au nombre des autres.
+                  items:
+                    type: object
+                    required: [memberId, relationship]
+                    properties:
+                      memberId:
+                        type: integer
+                      relationship:
+                        type: string
+                        description: Nature de la relation (famille, amis, collègues, etc.)
+                        example: famille
+      responses:
+        '201':
+          description: Demande créée
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  applicationId:
+                    type: integer
+                  status:
+                    type: string
+                    example: PENDING
+        '400':
+          description: Conditions de parrainage non respectées
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Règle de répartition des parrains non respectée
+
+  /members/applications/{id}/pay:
+    post:
+      summary: >
+        Paiement des frais d'adhésion (50 000 MGA) 
+        et des cotisations annuelles obligatoires de la collectivité
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [payments]
+              properties:
+                payments:
+                  type: array
+                  description: >
+                    Liste des paiements. Doit inclure les frais d'adhésion 
+                    (50 000 MGA) + l'intégralité des cotisations annuelles 
+                    obligatoires définies par la collectivité.
+                  items:
+                    type: object
+                    required: [type, amount, method]
+                    properties:
+                      type:
+                        type: string
+                        enum: [ADMISSION_FEE, ANNUAL_CONTRIBUTION]
+                        description: >
+                          ADMISSION_FEE = frais d'adhésion 50 000 MGA,
+                          ANNUAL_CONTRIBUTION = cotisations annuelles obligatoires
+                      amount:
+                        type: number
+                        example: 50000
+                      method:
+                        type: string
+                        enum: [MOBILE_MONEY, BANK_TRANSFER]
+                        description: Espèces non acceptées pour l'adhésion
+      responses:
+        '200':
+          description: Paiement validé
+        '400':
+          description: Montant incorrect ou mode de paiement invalide
+
+  /members/applications/{id}/validate:
+    post:
+      summary: Validation finale de l'adhésion par la collectivité
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Membre activé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  memberId:
+                    type: integer
+                  status:
+                    type: string
+                    example: ACTIVE
+        '403':
+          description: Demande refusée
+
+  /collectivities/{id}/members/{memberId}/transfer:
+    post:
+      summary: Changer de collectivité
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: memberId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [targetCollectivityId]
+              properties:
+                targetCollectivityId:
+                  type: integer
+      responses:
+        '200':
+          description: Transfert effectué
+
+  /collectivities/{id}/members/{memberId}/resign:
+    post:
+      summary: Démissionner d'une collectivité
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: memberId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Démission enregistrée
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
