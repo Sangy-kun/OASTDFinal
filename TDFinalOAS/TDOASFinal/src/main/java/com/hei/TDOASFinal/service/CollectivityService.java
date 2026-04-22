@@ -35,6 +35,38 @@ public class CollectivityService {
         return result;
     }
 
+    public Collectivity assignNumberAndName(String id, Map<String, Object> payload) {
+        String number = (String) payload.get("number");
+        String name   = (String) payload.get("name");
+
+        if (number == null || name == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Both number and name are required.");
+        }
+
+        try {
+            if (!collectivityRepository.existsById(id)) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Collectivity not found: " + id);
+            }
+
+            if (collectivityRepository.hasNumberOrName(id)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "This collectivity already has a number and name assigned. They cannot be changed.");
+            }
+
+            if (collectivityRepository.existsByName(name)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "The name '" + name + "' is already taken by another collectivity.");
+            }
+
+            return collectivityRepository.assignNumberAndName(id, number, name);
+
+        } catch (SQLException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
     @SuppressWarnings("unchecked")
     private Collectivity createOne(Map<String, Object> p) {
         if (!Boolean.TRUE.equals(p.get("federationApproval"))) {
@@ -55,7 +87,7 @@ public class CollectivityService {
         }
 
         List<Member> members = new ArrayList<>();
-        for (String id : memberIds) members.add(resolve(id));
+        for (String mid : memberIds) members.add(resolve(mid));
 
         CollectivityStructure structure = new CollectivityStructure();
         structure.setPresident(resolve(structurePayload.get("president")));
@@ -66,6 +98,7 @@ public class CollectivityService {
         Collectivity col = new Collectivity();
         col.setId(UUID.randomUUID().toString());
         col.setLocation((String) p.get("location"));
+        col.setSpecialty((String) p.get("specialty"));
         col.setStructure(structure);
         col.setMembers(members);
 
