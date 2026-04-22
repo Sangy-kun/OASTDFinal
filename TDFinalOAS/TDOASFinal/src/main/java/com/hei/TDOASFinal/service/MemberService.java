@@ -1,8 +1,8 @@
 package com.hei.TDOASFinal.service;
 
 import com.hei.TDOASFinal.model.Member;
-import com.hei.TDOASFinal.repository.CollectivityRepository;
-import com.hei.TDOASFinal.repository.MemberRepository;
+import com.hei.TDOASFinal.model.MemberPayment;
+import com.hei.TDOASFinal.repository.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -17,11 +17,23 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final CollectivityRepository collectivityRepository;
+    private final MembershipFeeRepository membershipFeeRepository;
+    private final FinancialAccountRepository financialAccountRepository;
+    private final MemberPaymentRepository memberPaymentRepository;
+    private final TransactionRepository transactionRepository;
 
     public MemberService(MemberRepository memberRepository,
-                         CollectivityRepository collectivityRepository) {
+                         CollectivityRepository collectivityRepository,
+                         MembershipFeeRepository membershipFeeRepository,
+                         FinancialAccountRepository financialAccountRepository,
+                         MemberPaymentRepository memberPaymentRepository,
+                         TransactionRepository transactionRepository) {
         this.memberRepository = memberRepository;
         this.collectivityRepository = collectivityRepository;
+        this.membershipFeeRepository = membershipFeeRepository;
+        this.financialAccountRepository = financialAccountRepository;
+        this.memberPaymentRepository = memberPaymentRepository;
+        this.transactionRepository = transactionRepository;
     }
 
     public List<Member> createAll(List<Map<String, Object>> payloads) {
@@ -112,6 +124,51 @@ public class MemberService {
             }
             saved.setReferees(referees.isEmpty() ? null : referees);
             return saved;
+        } catch (SQLException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    public List<MemberPayment> createPayments(String memberId, List<com.hei.TDOASFinal.model.CreateMemberPayment> payloads) {
+        try {
+            Member member = memberRepository.findById(memberId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Member not found"));
+
+            List<MemberPayment> result = new ArrayList<>();
+            for (com.hei.TDOASFinal.model.CreateMemberPayment dto : payloads) {
+                if (dto.getAmount() == null || dto.getAmount() <= 0) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Amount must be greater than 0");
+                }
+
+                com.hei.TDOASFinal.model.MembershipFee fee = membershipFeeRepository.findById(dto.getMembershipFeeIdentifier())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Membership fee not found"));
+
+                com.hei.TDOASFinal.model.FinancialAccount account = financialAccountRepository.findById(dto.getAccountCreditedIdentifier())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Financial account not found"));
+
+                MemberPayment payment = new com.hei.TDOASFinal.model.MemberPayment();
+                payment.setId(java.util.UUID.randomUUID().toString());
+                payment.setAmount(dto.getAmount());
+                payment.setPaymentMode(dto.getPaymentMode());
+                payment.setCreationDate(java.time.LocalDate.now());
+
+                memberPaymentRepository.save(payment, memberId, fee.getId(), account.getId());
+
+                com.hei.TDOASFinal.model.CollectivityTransaction transaction = new com.hei.TDOASFinal.model.CollectivityTransaction();
+                transaction.setId(java.util.UUID.randomUUID().toString());
+                transaction.setCreationDate(java.time.LocalDate.now());
+                transaction.setAmount(Double.valueOf(dto.getAmount()));
+                transaction.setPaymentMode(dto.getPaymentMode());
+                transaction.setAccountCredited(account);
+                transaction.setMemberDebited(member);
+
+                transactionRepository.save(fee.getCollectivityId(), transaction);
+
+                financialAccountRepository.creditAccount(account.getId(), dto.getAmount());
+
+                result.add(payment);
+            }
+            return result;
         } catch (SQLException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }

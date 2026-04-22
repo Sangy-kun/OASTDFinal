@@ -1,6 +1,6 @@
 package com.hei.TDOASFinal.controller;
 
-import com.hei.TDOASFinal.model.Collectivity;
+import com.hei.TDOASFinal.model.*;
 import com.hei.TDOASFinal.service.CollectivityService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -24,10 +24,30 @@ public class CollectivityController {
         return collectivityService.createAll(payload);
     }
 
-    @PatchMapping("/{id}/identity")
-    public Collectivity assignIdentity(
+    @PutMapping("/{id}/informations")
+    public Collectivity updateInformation(
             @PathVariable String id,
-            @RequestBody Map<String, Object> payload) {
-        return collectivityService.assignNumberAndName(id, payload);
+            @RequestBody CollectivityInformation payload) {
+        return collectivityService.updateInformation(id, payload);
+    }
+
+    @GetMapping("/{id}/membershipFees")
+    public List<MembershipFee> getMembershipFees(@PathVariable String id) {
+        return collectivityService.getMembershipFees(id);
+    }
+
+    @PostMapping("/{id}/membershipFees")
+    public List<MembershipFee> createMembershipFees(
+            @PathVariable String id,
+            @RequestBody List<CreateMembershipFee> payload) {
+        return collectivityService.createMembershipFees(id, payload);
+    }
+
+    @GetMapping("/{id}/transactions")
+    public List<CollectivityTransaction> getTransactions(
+            @PathVariable String id,
+            @RequestParam("from") @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate from,
+            @RequestParam("to") @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate to) {
+        return collectivityService.getTransactions(id, from, to);
     }
 }

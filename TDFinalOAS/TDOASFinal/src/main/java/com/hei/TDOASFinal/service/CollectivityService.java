@@ -1,9 +1,10 @@
 package com.hei.TDOASFinal.service;
 
-import com.hei.TDOASFinal.model.Collectivity;
-import com.hei.TDOASFinal.model.CollectivityStructure;
-import com.hei.TDOASFinal.model.Member;
+import com.hei.TDOASFinal.model.*;
 import com.hei.TDOASFinal.repository.CollectivityRepository;
+import com.hei.TDOASFinal.repository.MemberRepository;
+import com.hei.TDOASFinal.repository.MembershipFeeRepository;
+import com.hei.TDOASFinal.repository.TransactionRepository;
 import com.hei.TDOASFinal.repository.MemberRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -20,11 +21,17 @@ public class CollectivityService {
 
     private final CollectivityRepository collectivityRepository;
     private final MemberRepository memberRepository;
+    private final MembershipFeeRepository membershipFeeRepository;
+    private final TransactionRepository transactionRepository;
 
     public CollectivityService(CollectivityRepository collectivityRepository,
-                               MemberRepository memberRepository) {
+                               MemberRepository memberRepository,
+                               MembershipFeeRepository membershipFeeRepository,
+                               TransactionRepository transactionRepository) {
         this.collectivityRepository = collectivityRepository;
         this.memberRepository = memberRepository;
+        this.membershipFeeRepository = membershipFeeRepository;
+        this.transactionRepository = transactionRepository;
     }
 
     public List<Collectivity> createAll(List<Map<String, Object>> payloads) {
@@ -35,9 +42,9 @@ public class CollectivityService {
         return result;
     }
 
-    public Collectivity assignNumberAndName(String id, Map<String, Object> payload) {
-        String number = (String) payload.get("number");
-        String name   = (String) payload.get("name");
+    public Collectivity updateInformation(String id, CollectivityInformation info) {
+        String name = info.getName();
+        Integer number = info.getNumber();
 
         if (number == null || name == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -50,18 +57,77 @@ public class CollectivityService {
                         "Collectivity not found: " + id);
             }
 
-            if (collectivityRepository.hasNumberOrName(id)) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT,
-                        "This collectivity already has a number and name assigned. They cannot be changed.");
+            if (collectivityRepository.numberExists(number)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "The number " + number + " is already taken by another collectivity.");
             }
 
             if (collectivityRepository.existsByName(name)) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         "The name '" + name + "' is already taken by another collectivity.");
             }
 
-            return collectivityRepository.assignNumberAndName(id, number, name);
+            return collectivityRepository.updateInformation(id, name, number);
 
+        } catch (SQLException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    public List<MembershipFee> getMembershipFees(String collectivityId) {
+        try {
+            if (!collectivityRepository.existsById(collectivityId)) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Collectivity not found");
+            }
+            return membershipFeeRepository.findByCollectivityId(collectivityId);
+        } catch (SQLException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    public List<MembershipFee> createMembershipFees(String collectivityId, List<CreateMembershipFee> fees) {
+        try {
+            if (!collectivityRepository.existsById(collectivityId)) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Collectivity not found");
+            }
+
+            List<MembershipFee> result = new ArrayList<>();
+            for (CreateMembershipFee dto : fees) {
+                if (dto.getAmount() == null || dto.getAmount() < 0) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Amount cannot be under 0");
+                }
+                if (dto.getFrequency() == null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unrecognized frequency");
+                }
+
+                MembershipFee fee = new MembershipFee();
+                fee.setId(UUID.randomUUID().toString());
+                fee.setEligibleFrom(dto.getEligibleFrom());
+                fee.setFrequency(dto.getFrequency());
+                fee.setAmount(dto.getAmount());
+                fee.setLabel(dto.getLabel());
+                fee.setStatus(ActivityStatus.ACTIVE);
+
+                result.add(membershipFeeRepository.save(collectivityId, fee));
+            }
+            return result;
+        } catch (SQLException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    public List<CollectivityTransaction> getTransactions(String collectivityId, java.time.LocalDate from, java.time.LocalDate to) {
+        try {
+            if (!collectivityRepository.existsById(collectivityId)) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Collectivity not found");
+            }
+            if (from == null || to == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Both from and to dates are required.");
+            }
+            if (from.isAfter(to)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "from date cannot be after to date.");
+            }
+            return transactionRepository.findByCollectivityAndDates(collectivityId, from, to);
         } catch (SQLException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }

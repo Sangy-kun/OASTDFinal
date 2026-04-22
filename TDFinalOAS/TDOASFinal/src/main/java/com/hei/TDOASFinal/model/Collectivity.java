@@ -5,7 +5,7 @@ import java.util.List;
 public class Collectivity {
 
     private String id;
-    private String number;
+    private Integer number;
     private String name;
     private String location;
     private String specialty;
@@ -14,8 +14,8 @@ public class Collectivity {
 
     public String getId() { return id; }
     public void setId(String v) { this.id = v; }
-    public String getNumber() { return number; }
-    public void setNumber(String v) { this.number = v; }
+    public Integer getNumber() { return number; }
+    public void setNumber(Integer v) { this.number = v; }
     public String getName() { return name; }
     public void setName(String v) { this.name = v; }
     public String getLocation() { return location; }

@@ -1,6 +1,8 @@
 package com.hei.TDOASFinal.controller;
 
 import com.hei.TDOASFinal.model.Member;
+import com.hei.TDOASFinal.model.MemberPayment;
+import com.hei.TDOASFinal.model.CreateMemberPayment;
 import com.hei.TDOASFinal.service.MemberService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -22,5 +24,13 @@ public class MemberController {
     @ResponseStatus(HttpStatus.CREATED)
     public List<Member> create(@RequestBody List<Map<String, Object>> payload) {
         return memberService.createAll(payload);
+    }
+
+    @PostMapping("/{id}/payments")
+    @ResponseStatus(HttpStatus.CREATED)
+    public List<MemberPayment> createPayments(
+            @PathVariable String id,
+            @RequestBody List<CreateMemberPayment> payload) {
+        return memberService.createPayments(id, payload);
     }
 }

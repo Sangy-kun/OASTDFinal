@@ -74,20 +74,20 @@ public class CollectivityRepository {
         }
     }
 
-    public boolean hasNumberOrName(String id) throws SQLException {
-        String sql = "SELECT 1 FROM collectivities WHERE id = ? AND (number IS NOT NULL OR name IS NOT NULL)";
+    public boolean numberExists(Integer number) throws SQLException {
+        String sql = "SELECT 1 FROM collectivities WHERE number = ?";
         try (Connection c = DatabaseConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setString(1, id);
+            ps.setInt(1, number);
             return ps.executeQuery().next();
         }
     }
 
-    public Collectivity assignNumberAndName(String id, String number, String name) throws SQLException {
+    public Collectivity updateInformation(String id, String name, Integer number) throws SQLException {
         String sql = "UPDATE collectivities SET number = ?, name = ? WHERE id = ?";
         try (Connection c = DatabaseConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setString(1, number);
+            ps.setInt(1, number);
             ps.setString(2, name);
             ps.setString(3, id);
             ps.executeUpdate();
@@ -113,7 +113,8 @@ public class CollectivityRepository {
     private Collectivity mapRow(ResultSet rs) throws SQLException {
         Collectivity c = new Collectivity();
         c.setId(rs.getString("id"));
-        c.setNumber(rs.getString("number"));
+        Object numObj = rs.getObject("number");
+        c.setNumber(numObj != null ? ((Number) numObj).intValue() : null);
         c.setName(rs.getString("name"));
         c.setLocation(rs.getString("location"));
         c.setSpecialty(rs.getString("specialty"));
