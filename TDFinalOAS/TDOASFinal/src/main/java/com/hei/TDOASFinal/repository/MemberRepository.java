@@ -128,4 +128,5 @@ public class MemberRepository {
         m.setCollectivityId(rs.getString("collectivity_id"));
         return m;
     }
+
 }
