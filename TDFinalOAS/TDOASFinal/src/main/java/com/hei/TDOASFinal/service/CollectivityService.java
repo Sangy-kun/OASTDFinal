@@ -2,10 +2,10 @@ package com.hei.TDOASFinal.service;
 
 import com.hei.TDOASFinal.model.*;
 import com.hei.TDOASFinal.repository.CollectivityRepository;
+import com.hei.TDOASFinal.repository.FinancialAccountRepository;
 import com.hei.TDOASFinal.repository.MemberRepository;
 import com.hei.TDOASFinal.repository.MembershipFeeRepository;
 import com.hei.TDOASFinal.repository.TransactionRepository;
-import com.hei.TDOASFinal.repository.MemberRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -23,15 +23,18 @@ public class CollectivityService {
     private final MemberRepository memberRepository;
     private final MembershipFeeRepository membershipFeeRepository;
     private final TransactionRepository transactionRepository;
+    private final FinancialAccountRepository financialAccountRepository;
 
     public CollectivityService(CollectivityRepository collectivityRepository,
                                MemberRepository memberRepository,
                                MembershipFeeRepository membershipFeeRepository,
-                               TransactionRepository transactionRepository) {
+                               TransactionRepository transactionRepository,
+                               FinancialAccountRepository financialAccountRepository) {
         this.collectivityRepository = collectivityRepository;
         this.memberRepository = memberRepository;
         this.membershipFeeRepository = membershipFeeRepository;
         this.transactionRepository = transactionRepository;
+        this.financialAccountRepository = financialAccountRepository;
     }
 
     public List<Collectivity> createAll(List<Map<String, Object>> payloads) {
@@ -180,6 +183,30 @@ public class CollectivityService {
             return memberRepository.findById(id)
                     .orElseThrow(() -> new ResponseStatusException(
                             HttpStatus.NOT_FOUND, "Member not found: " + id));
+        } catch (SQLException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    public Collectivity getById(String id) {
+        try {
+            return collectivityRepository.findById(id)
+                    .orElseThrow(() -> new ResponseStatusException(
+                            HttpStatus.NOT_FOUND, "Collectivity not found: " + id));
+        } catch (SQLException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    public List<FinancialAccount> getFinancialAccounts(String collectivityId, java.time.LocalDate at) {
+        try {
+            if (!collectivityRepository.existsById(collectivityId)) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Collectivity not found");
+            }
+            if (at != null) {
+                return financialAccountRepository.findByCollectivityIdAt(collectivityId, at);
+            }
+            return financialAccountRepository.findByCollectivityId(collectivityId);
         } catch (SQLException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }

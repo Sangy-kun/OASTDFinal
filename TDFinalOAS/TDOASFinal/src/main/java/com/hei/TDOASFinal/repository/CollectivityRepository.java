@@ -51,7 +51,10 @@ public class CollectivityRepository {
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, id);
             ResultSet rs = ps.executeQuery();
-            if (rs.next()) return Optional.of(mapRow(rs));
+            if (rs.next()) {
+                Collectivity col = mapRow(rs);
+                return Optional.of(buildFull(col));
+            }
         }
         return Optional.empty();
     }

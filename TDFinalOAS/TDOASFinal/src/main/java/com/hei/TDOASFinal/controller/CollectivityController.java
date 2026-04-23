@@ -50,4 +50,18 @@ public class CollectivityController {
             @RequestParam("to") @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate to) {
         return collectivityService.getTransactions(id, from, to);
     }
+
+    @GetMapping("/{id}")
+    public Collectivity getById(@PathVariable String id) {
+        return collectivityService.getById(id);
+    }
+
+    @GetMapping("/{id}/financialAccounts")
+    public List<FinancialAccount> getFinancialAccounts(
+            @PathVariable String id,
+            @RequestParam(value = "at", required = false)
+            @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE)
+            java.time.LocalDate at) {
+        return collectivityService.getFinancialAccounts(id, at);
+    }
 }
