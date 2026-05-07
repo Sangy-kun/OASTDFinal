@@ -11,7 +11,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
   &quot;lastFilter&quot;: {
@@ -19,12 +19,12 @@
     &quot;assignee&quot;: &quot;Sangy-kun&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/ikkikana/OASFinal.git&quot;,
-    &quot;accountId&quot;: &quot;338abb1b-f16c-4fc2-bdf3-ca49f41d5817&quot;
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/Sangy-kun/OASTDFinal.git",
+    "accountId": "338abb1b-f16c-4fc2-bdf3-ca49f41d5817"
   }
-}</component>
+}]]></component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 6
 }</component>
@@ -38,9 +38,9 @@
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "TD4branch",
+    "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "C:/Users/Best/Documents/L2/ETUDE S3/PROG3/TD/TDFinalOAS1",
+    "last_opened_file_path": "C:/Users/Best/Documents/L2/ETUDE S3/PROG3/TD/OASTDFinal/OASTDFinal/TDFinalOAS",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -67,6 +67,7 @@
       <workItem from="1776765206947" duration="628000" />
       <workItem from="1776767037238" duration="138000" />
       <workItem from="1776767195953" duration="2219000" />
+      <workItem from="1776848091461" duration="30000" />
     </task>
     <servers />
   </component>
