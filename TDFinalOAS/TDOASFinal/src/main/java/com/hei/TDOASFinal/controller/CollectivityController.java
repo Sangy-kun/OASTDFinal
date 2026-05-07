@@ -9,13 +9,16 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/collectivities")
+@RequestMapping({"/collectivities", "/collectivites"})
 public class CollectivityController {
 
     private final CollectivityService collectivityService;
+    private final com.hei.TDOASFinal.service.StatisticService statisticService;
 
-    public CollectivityController(CollectivityService collectivityService) {
+    public CollectivityController(CollectivityService collectivityService,
+                                  com.hei.TDOASFinal.service.StatisticService statisticService) {
         this.collectivityService = collectivityService;
+        this.statisticService = statisticService;
     }
 
     @PostMapping
@@ -63,5 +66,20 @@ public class CollectivityController {
             @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE)
             java.time.LocalDate at) {
         return collectivityService.getFinancialAccounts(id, at);
+    }
+
+    @GetMapping("/statistics")
+    public List<CollectivityOverallStatistics> getGlobalStatistics(
+            @RequestParam("from") @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate from,
+            @RequestParam("to") @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate to) {
+        return statisticService.getAllGlobalStatistics(from, to);
+    }
+
+    @GetMapping("/{id}/statistics")
+    public List<CollectivityLocalStatistics> getMemberStatistics(
+            @PathVariable String id,
+            @RequestParam("from") @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate from,
+            @RequestParam("to") @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate to) {
+        return statisticService.getMemberStatistics(id, from, to);
     }
 }
