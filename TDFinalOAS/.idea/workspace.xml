@@ -10,6 +10,9 @@
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="ComposerSettings">
+    <execution />
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
@@ -19,12 +22,12 @@
     &quot;assignee&quot;: &quot;Sangy-kun&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/Sangy-kun/OASTDFinal.git",
-    "accountId": "338abb1b-f16c-4fc2-bdf3-ca49f41d5817"
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Sangy-kun/OASTDFinal.git&quot;,
+    &quot;accountId&quot;: &quot;338abb1b-f16c-4fc2-bdf3-ca49f41d5817&quot;
   }
-}]]></component>
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 6
 }</component>
@@ -38,17 +41,34 @@
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
+    "Spring Boot.TdoasFinalApplication.executor": "Run",
+    "git-widget-placeholder": "essaieSangy",
     "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "C:/Users/Best/Documents/L2/ETUDE S3/PROG3/TD/OASTDFinal/OASTDFinal/TDFinalOAS",
+    "last_opened_file_path": "F:/Thing's i really care about/ONTARIO/Lunis/HEI/L2/PROG3/finalOAS/OASTDFinal/TDFinalOAS",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "project.propVCSSupport.DirectoryMappings",
     "vue.rearranger.settings.migration": "true"
+  },
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "postgresql"
+    ]
   }
 }]]></component>
+  <component name="RunManager">
+    <configuration name="TdoasFinalApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
+      <module name="TDOASFinal" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.hei.TDOASFinal.TdoasFinalApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -68,6 +88,7 @@
       <workItem from="1776767037238" duration="138000" />
       <workItem from="1776767195953" duration="2219000" />
       <workItem from="1776848091461" duration="30000" />
+      <workItem from="1778140956716" duration="1244000" />
     </task>
     <servers />
   </component>
