@@ -1,0 +1,38 @@
+openapi: 3.0.0
+info:
+  title: Collectivity API
+  version: 1.0.0
+
+paths:
+
+  /collectivities/{id}/financialAccounts:
+    get:
+      summary: Get financial accounts of a collectivity
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: at
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: List of financial accounts
+
+  /collectivities/{id}:
+    get:
+      summary: Get collectivity by id including members
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Collectivity details
