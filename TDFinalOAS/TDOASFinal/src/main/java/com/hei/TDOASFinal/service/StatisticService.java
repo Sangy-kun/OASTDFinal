@@ -87,8 +87,8 @@ public class StatisticService {
         try {
             List<String> collectivityIds = getAllCollectivityIds();
             List<CollectivityOverallStatistics> result = new ArrayList<>();
-            for (String id : collectivityIds) {
-                result.add(getGlobalStatistic(id, from, to));
+            for (String cid : collectivityIds) {
+                result.add(buildOverallStat(cid, from, to));
             }
             return result;
         } catch (SQLException e) {
@@ -96,38 +96,45 @@ public class StatisticService {
         }
     }
 
+
+    private CollectivityOverallStatistics buildOverallStat(String collectivityId, LocalDate from, LocalDate to) throws SQLException {
+        List<Member> members = memberRepository.findByCollectivityId(collectivityId);
+        List<MembershipFee> activeFees = getActiveFees(collectivityId);
+
+        Map<String, Map<String, Double>> paymentsPerFee = getPaymentsPerMemberAndFee(collectivityId, from, to);
+
+        int totalMembers = members.size();
+        int upToDateCount = 0;
+
+        for (Member m : members) {
+            double potentialUnpaid = 0.0;
+            for (MembershipFee fee : activeFees) {
+                double expected = calculateExpectedAmount(fee, from, to);
+                double paid = paymentsPerFee
+                        .getOrDefault(m.getId(), Collections.emptyMap())
+                        .getOrDefault(fee.getId(), 0.0);
+                double unpaid = expected - paid;
+                if (unpaid > 0) potentialUnpaid += unpaid;
+            }
+            if (potentialUnpaid <= 0) upToDateCount++;
+        }
+
+        double percentage = totalMembers > 0 ? ((double) upToDateCount / totalMembers) * 100.0 : 0.0;
+        int newMembers = getNewMembersCount(collectivityId, from, to);
+
+        CollectivityOverallStatistics stat = new CollectivityOverallStatistics();
+        // Fetch name/number directly without triggering buildFull (avoids NPE on null bureau), i guess, it worked, so won't touch it anymore
+        CollectivityInformation info = getCollectivityInformation(collectivityId);
+        stat.setCollectivityInformation(info);
+        stat.setOverallMemberCurrentDuePercentage(percentage);
+        stat.setNewMembersNumber(newMembers);
+        return stat;
+    }
+
     public CollectivityOverallStatistics getGlobalStatistic(String collectivityId, LocalDate from, LocalDate to) {
         validateCollectivityAndDates(collectivityId, from, to);
-
         try {
-            List<CollectivityLocalStatistics> memberStats = getMemberStatistics(collectivityId, from, to);
-            int totalMembers = memberStats.size();
-            int upToDateCount = 0;
-
-            for (CollectivityLocalStatistics ms : memberStats) {
-                if (ms.getUnpaidAmount() <= 0) {
-                    upToDateCount++;
-                }
-            }
-
-            double percentage = totalMembers > 0 ? ((double) upToDateCount / totalMembers) * 100.0 : 0.0;
-            int newMembers = getNewMembersCount(collectivityId, from, to);
-            
-            Collectivity col = collectivityRepository.findById(collectivityId).orElse(null);
-
-            CollectivityOverallStatistics stat = new CollectivityOverallStatistics();
-            
-            if (col != null) {
-                CollectivityInformation info = new CollectivityInformation();
-                info.setName(col.getName());
-                info.setNumber(col.getNumber());
-                stat.setCollectivityInformation(info);
-            }
-            
-            stat.setOverallMemberCurrentDuePercentage(percentage);
-            stat.setNewMembersNumber(newMembers);
-
-            return stat;
+            return buildOverallStat(collectivityId, from, to);
         } catch (SQLException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }
@@ -249,6 +256,23 @@ public class StatisticService {
             }
         }
         return 0;
+    }
+
+    private CollectivityInformation getCollectivityInformation(String collectivityId) throws SQLException {
+        String sql = "SELECT name, number FROM collectivities WHERE id = ?";
+        try (Connection c = DatabaseConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, collectivityId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                CollectivityInformation info = new CollectivityInformation();
+                info.setName(rs.getString("name"));
+                Object numObj = rs.getObject("number");
+                info.setNumber(numObj != null ? ((Number) numObj).intValue() : null);
+                return info;
+            }
+        }
+        return null;
     }
 
     private List<String> getAllCollectivityIds() throws SQLException {
